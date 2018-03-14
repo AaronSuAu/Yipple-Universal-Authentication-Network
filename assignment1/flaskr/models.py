@@ -30,28 +30,24 @@ class User:
 
 def registerUser(username, password):
     komrade = KomradeConfig("user")
-    user = User(username, password)
 
-    if username == "" or password == "":
+    if not username or not password:
         return 500
 
-    rawData = komrade.read()
-    if rawData == "":
-        jsonData = json.loads(rawData)
-        if username == jsonData['username']:
+    users = komrade.read()
+    for key in users:
+        if key == username:
             return 400
-
-    komrade.write(user.getJsonData())
+    users[username] = bcrypt.hashpw(password, bcrypt.gensalt())
+    komrade.write(users)
     return 302
 
 def validateUser(username, password):
     komrade = KomradeConfig("user")
-    rawData = komrade.read()
-    if rawData == "":
-        pass
-
-    jsonData = json.loads(rawData)
-    if jsonData['username'] == username and jsonData['password'] == password:
-        return 300
-    else:
+    users = komrade.read()
+    if not users:
         return 403
+    for key in users:
+        if key == username and bcrypt.checkpw(password, users[key]):
+            return 200
+    return 403
