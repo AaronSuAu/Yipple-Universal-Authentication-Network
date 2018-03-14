@@ -35,19 +35,35 @@ def registerUser(username, password):
         return 500
 
     users = komrade.read()
-    for key in users:
-        if key == username:
-            return 400
-    users[username] = bcrypt.hashpw(password, bcrypt.gensalt())
+
+    if users != "":
+        if "data" in users:
+            for key in users['data']:
+                temp = json.loads(key)
+                if temp["username"] == username:
+                    return 400
+        else:
+            users['data'] = []
+    #users[username] = bcrypt.hashpw(password, bcrypt.gensalt())
+    password = password.encode("utf-8")
+    hashPass = bcrypt.hashpw(password, bcrypt.gensalt())
+    userId = str(uuid.uuid4())
+    userData = {'username':username, 'password':hashPass, 'userId':userId}
+    userData = json.dumps(userData)
+
+    users['data'].append(userData)
     komrade.write(users)
     return 302
 
 def validateUser(username, password):
     komrade = KomradeConfig("user")
+    password = password.encode("utf-8")
     users = komrade.read()
     if not users:
         return 403
-    for key in users:
-        if key == username and bcrypt.checkpw(password, users[key]):
-            return 200
+    for key in users['data']:
+        temp = json.loads(key)
+        temp['password'] = temp['password'].encode("utf-8")
+        if temp['username'] == username and bcrypt.checkpw(password, temp['password']):
+            return temp['userId']
     return 403

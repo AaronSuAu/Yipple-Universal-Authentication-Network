@@ -16,7 +16,8 @@ def login():
             return "Invalid username or password", 403
         else:
             session['username'] = username
-            return redirect(url_for("basic.users", account=username))
+            session['userId'] = code
+            return redirect(url_for("basic.users", account=code))
 
     return render_template("login.html")
 
@@ -44,7 +45,7 @@ def register():
 @app.route('/users/<account>')
 def users(account):
     if session.get('username') is not None:
-        if(session.get('username') == account or account.lower() == "me"):
+        if(session.get('userId') == account or account.lower() == "me"):
             return render_template("users.html", account= session.get('username'))
 
     return "Please login first", 403
